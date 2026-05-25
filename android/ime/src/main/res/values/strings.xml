@@ -15,4 +15,5 @@
     <string name="ime_status_missing_connection">No active input connection.</string>
     <string name="ime_status_cancelled">Voice input cancelled.</string>
     <string name="ime_status_unavailable">Speech recognition is unavailable on this device.</string>
+    <string name="ime_partial_placeholder">Realtime transcript will appear here.</string>
 </resources>

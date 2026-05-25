@@ -24,10 +24,13 @@ class VoiceInputImeService : InputMethodService(), LocalRecognitionListener {
     private var activeSession: VoiceInputSession? = null
     private lateinit var triggerButton: Button
     private lateinit var statusView: TextView
+    private lateinit var partialView: TextView
+    private lateinit var undoButton: Button
     private var recognizerEngine: DashScopeRecognitionEngine? = null
     private var voiceStartPosted = false
     private var isReadyForAudio = false
     private var awaitingFinalResult = false
+    private var lastCommittedText: String? = null
 
     override fun onCreateInputView(): View {
         val container = LinearLayout(this).apply {
@@ -39,9 +42,19 @@ class VoiceInputImeService : InputMethodService(), LocalRecognitionListener {
             text = getString(com.example.voiceinput.ime.R.string.ime_status_idle)
         }
 
+        partialView = TextView(this).apply {
+            text = getString(com.example.voiceinput.ime.R.string.ime_partial_placeholder)
+        }
+
         triggerButton = Button(this).apply {
             text = getString(com.example.voiceinput.ime.R.string.ime_button_start)
             setOnClickListener { toggleVoiceInput() }
+        }
+
+        undoButton = Button(this).apply {
+            text = "Undo Last Voice"
+            isEnabled = false
+            setOnClickListener { undoLastCommit() }
         }
 
         container.addView(
@@ -52,7 +65,21 @@ class VoiceInputImeService : InputMethodService(), LocalRecognitionListener {
             ),
         )
         container.addView(
+            partialView,
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+            ),
+        )
+        container.addView(
             triggerButton,
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+            ),
+        )
+        container.addView(
+            undoButton,
             LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT,
@@ -145,6 +172,8 @@ class VoiceInputImeService : InputMethodService(), LocalRecognitionListener {
         if (::triggerButton.isInitialized) {
             triggerButton.text = getString(com.example.voiceinput.ime.R.string.ime_button_start)
         }
+        clearPartial()
+        syncUndoButton()
     }
 
     private fun resolveEntryContext(editorInfo: EditorInfo?): EntryContext {
@@ -161,13 +190,14 @@ class VoiceInputImeService : InputMethodService(), LocalRecognitionListener {
         isReadyForAudio = true
         awaitingFinalResult = false
         updateStatus(getString(com.example.voiceinput.ime.R.string.ime_status_listening))
+        clearPartial()
         updateTriggerButton(getString(com.example.voiceinput.ime.R.string.ime_button_stop))
     }
 
     override fun onPartial(text: String) {
         log("onPartial text=$text")
         isReadyForAudio = true
-        updateStatus(text)
+        updatePartial(text)
     }
 
     override fun onFinal(text: String) {
@@ -183,8 +213,11 @@ class VoiceInputImeService : InputMethodService(), LocalRecognitionListener {
         }
 
         inputConnection.commitText(text, 1)
+        lastCommittedText = text
         activeSession = captureCoordinator.complete(session, text.length)
         updateStatus(getString(com.example.voiceinput.ime.R.string.ime_status_result))
+        clearPartial()
+        syncUndoButton()
         updateTriggerButton(getString(com.example.voiceinput.ime.R.string.ime_button_start))
     }
 
@@ -197,6 +230,7 @@ class VoiceInputImeService : InputMethodService(), LocalRecognitionListener {
             activeSession = captureCoordinator.fail(session, InterruptionReason.RECOGNITION_ERROR)
         }
         updateStatus("${getString(com.example.voiceinput.ime.R.string.ime_status_error)} ($message)")
+        clearPartial()
         updateTriggerButton(getString(com.example.voiceinput.ime.R.string.ime_button_start))
     }
 
@@ -209,7 +243,21 @@ class VoiceInputImeService : InputMethodService(), LocalRecognitionListener {
             activeSession = captureCoordinator.cancel(session)
         }
         updateStatus(getString(com.example.voiceinput.ime.R.string.ime_status_cancelled))
+        clearPartial()
         updateTriggerButton(getString(com.example.voiceinput.ime.R.string.ime_button_start))
+    }
+
+    private fun undoLastCommit() {
+        val inputConnection = currentInputConnection ?: run {
+            updateStatus(getString(com.example.voiceinput.ime.R.string.ime_status_missing_connection))
+            return
+        }
+        val committedText = lastCommittedText ?: return
+        inputConnection.deleteSurroundingText(committedText.length, 0)
+        lastCommittedText = null
+        syncUndoButton()
+        updateStatus("Last voice result removed.")
+        clearPartial()
     }
 
     private fun getOrCreateRecognizerEngine(): DashScopeRecognitionEngine {
@@ -222,9 +270,27 @@ class VoiceInputImeService : InputMethodService(), LocalRecognitionListener {
         }
     }
 
+    private fun updatePartial(text: String) {
+        if (::partialView.isInitialized) {
+            partialView.text = text
+        }
+    }
+
+    private fun clearPartial() {
+        if (::partialView.isInitialized) {
+            partialView.text = getString(com.example.voiceinput.ime.R.string.ime_partial_placeholder)
+        }
+    }
+
     private fun updateTriggerButton(text: String) {
         if (::triggerButton.isInitialized) {
             triggerButton.text = text
+        }
+    }
+
+    private fun syncUndoButton() {
+        if (::undoButton.isInitialized) {
+            undoButton.isEnabled = !lastCommittedText.isNullOrEmpty()
         }
     }
 

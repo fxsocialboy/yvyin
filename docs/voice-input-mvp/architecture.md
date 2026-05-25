@@ -1,18 +1,39 @@
 # Voice Input MVP Architecture
 
-## Modules
+## Current Runtime Modules
 
-- `android/ime`: Android-first IME session, capture, UI, and continuation logic.
-- `android/core`: shared models, privacy enforcement, telemetry aggregation.
-- `android/data`: local settings, local persistence, network gateway client, personalization.
-- `backend/recognition-gateway`: policy hooks and future cloud enhancement routing.
-- `tests`: contract, integration, performance, and UX-scenario validation.
+- `android/ime`
+  - real `InputMethodService`
+  - IME button and status UI
+  - session wiring
+  - `commitText()` insertion
+- `android/core`
+  - session models and state support used by the IME flow
+- `backend/recognition-gateway`
+  - currently not on the critical production path
 
-## Main Flow
+## Current Production Recognition Path
 
-1. User invokes voice input from the active field.
-2. Local recognition starts immediately and produces partial text.
-3. Cloud enhancement is gated by policy and network quality.
-4. Text is inserted into the active field and remains editable inline.
-5. Telemetry and privacy records are updated without default long-term raw-audio retention.
+1. User taps `Start Voice` inside the IME.
+2. `VoiceInputImeService` starts a voice session.
+3. `DashScopeRecognitionEngine` opens a realtime WebSocket session.
+4. `AudioRecordCaptureEngine` captures 16 kHz mono PCM audio.
+5. Audio chunks are streamed to DashScope.
+6. Partial transcript events are shown inside the IME UI.
+7. Speech end or manual stop closes the session.
+8. Final transcript is returned.
+9. `VoiceInputImeService` inserts final text through `currentInputConnection.commitText()`.
 
+## Key Files
+
+- `android/ime/src/main/kotlin/com/example/voiceinput/ime/VoiceInputImeService.kt`
+- `android/ime/src/main/kotlin/com/example/voiceinput/transcription/cloud/DashScopeRecognitionEngine.kt`
+- `android/ime/src/main/kotlin/com/example/voiceinput/transcription/cloud/DashScopeRealtimeAsrClient.kt`
+- `android/ime/src/main/kotlin/com/example/voiceinput/transcription/local/AudioRecordCaptureEngine.kt`
+
+## Deliberate Non-Goals In Current Code
+
+- no production Huawei `SpeechRecognizer` dependency
+- no heavy cloud orchestration layer
+- no Room/DataStore driven personalization loop on the MVP path
+- no benchmark-driven architecture expansion before core input flow stabilization
