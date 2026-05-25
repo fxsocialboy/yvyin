@@ -166,6 +166,7 @@ class VoiceInputImeService : InputMethodService(), LocalRecognitionListener {
 
     override fun onPartial(text: String) {
         log("onPartial text=$text")
+        isReadyForAudio = true
         updateStatus(text)
     }
 

@@ -82,6 +82,22 @@ class DashScopeRecognitionEngine(
                     }
                 }
 
+                override fun onSpeechEnded() {
+                    mainHandler.post {
+                        if (currentSessionId != sessionId || state != EngineState.RECORDING) {
+                            return@post
+                        }
+                        state = EngineState.STOPPING
+                        log("session=$currentSessionId speech ended by server_vad")
+                        recorder?.stop()
+                        scheduleTimeout(currentSessionId, "awaiting final transcription", FINAL_TIMEOUT_MS) {
+                            val currentListener = listener
+                            reset("final timeout")
+                            currentListener?.onError("DashScope transcription timeout")
+                        }
+                    }
+                }
+
                 override fun onError(message: String) {
                     mainHandler.post {
                         if (currentSessionId != sessionId || state == EngineState.IDLE) {
@@ -116,7 +132,7 @@ class DashScopeRecognitionEngine(
         state = EngineState.STOPPING
         log("session=$sessionId stopListening dispatched")
         recorder?.stop()
-        client?.commitAudio()
+        client?.finishSession()
         scheduleTimeout(sessionId, "awaiting final transcription", FINAL_TIMEOUT_MS) {
             val currentListener = listener
             reset("final timeout")

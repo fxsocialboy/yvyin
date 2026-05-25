@@ -35,8 +35,19 @@ class VoiceCaptureCoordinator(
     }
 
     fun complete(session: VoiceInputSession, acceptedTextLength: Int): VoiceInputSession {
+        val transcribing = when (session.sessionState) {
+            SessionState.LISTENING -> sessionManager.transition(session, SessionState.TRANSCRIBING_LOCAL)
+            SessionState.TRANSCRIBING_LOCAL,
+            SessionState.TRANSCRIBING_CLOUD,
+            SessionState.AWAITING_USER_EDIT,
+            SessionState.COMPLETED,
+            SessionState.CANCELLED,
+            SessionState.FAILED,
+            SessionState.IDLE,
+            -> session
+        }
         return sessionManager.transition(
-            session.copy(acceptedTextLength = acceptedTextLength),
+            transcribing.copy(acceptedTextLength = acceptedTextLength),
             SessionState.AWAITING_USER_EDIT,
         ).let { awaiting ->
             sessionManager.transition(awaiting, SessionState.COMPLETED)

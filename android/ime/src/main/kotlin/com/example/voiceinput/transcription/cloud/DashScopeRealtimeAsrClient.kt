@@ -21,6 +21,7 @@ class DashScopeRealtimeAsrClient(
         fun onPartial(text: String)
         fun onCompleted(text: String)
         fun onError(message: String)
+        fun onSpeechEnded()
     }
 
     private val httpClient = OkHttpClient.Builder()
@@ -29,7 +30,6 @@ class DashScopeRealtimeAsrClient(
         .build()
 
     private var webSocket: WebSocket? = null
-
     fun connect() {
         val request = Request.Builder()
             .url("$WS_URL?model=$model")
@@ -47,7 +47,13 @@ class DashScopeRealtimeAsrClient(
                             .put("modalities", org.json.JSONArray().put("text"))
                             .put("input_audio_format", "pcm")
                             .put("sample_rate", AudioRecordCaptureEngine.SAMPLE_RATE_HZ)
-                            .put("turn_detection", JSONObject.NULL)
+                            .put(
+                                "turn_detection",
+                                JSONObject()
+                                    .put("type", "server_vad")
+                                    .put("silence_duration_ms", 1200)
+                                    .put("prefix_padding_ms", 300),
+                            )
                             .put(
                                 "input_audio_transcription",
                                 JSONObject()
@@ -83,8 +89,8 @@ class DashScopeRealtimeAsrClient(
         webSocket?.send(payload)
     }
 
-    fun commitAudio() {
-        webSocket?.send(JSONObject().put("type", "input_audio_buffer.commit").toString())
+    fun finishSession() {
+        webSocket?.send(JSONObject().put("type", "session.finish").toString())
     }
 
     fun close() {
@@ -106,12 +112,13 @@ class DashScopeRealtimeAsrClient(
                 listener.onSessionReady()
             }
 
-            "conversation.item.input_audio_transcription.delta" -> {
-                val delta = root.optString("delta")
-                    .ifBlank { root.optJSONObject("item")?.optString("delta").orEmpty() }
-                if (delta.isNotBlank()) {
-                    log("partial=$delta")
-                    listener.onPartial(delta)
+            "conversation.item.input_audio_transcription.text" -> {
+                val confirmedText = root.optString("text")
+                val stashText = root.optString("stash")
+                val previewText = confirmedText + stashText
+                log("partial=$previewText")
+                if (previewText.isNotBlank()) {
+                    listener.onPartial(previewText)
                 }
             }
 
@@ -120,6 +127,15 @@ class DashScopeRealtimeAsrClient(
                     .ifBlank { root.optJSONObject("item")?.optString("transcript").orEmpty() }
                 log("completed=$transcript")
                 listener.onCompleted(transcript)
+            }
+
+            "input_audio_buffer.speech_started" -> {
+                log("speech_started")
+            }
+
+            "input_audio_buffer.speech_stopped" -> {
+                log("speech_stopped")
+                listener.onSpeechEnded()
             }
 
             "error" -> {
