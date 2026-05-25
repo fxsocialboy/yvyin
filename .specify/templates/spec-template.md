@@ -1,8 +1,8 @@
 # Feature Specification: [FEATURE NAME]
 
-**Feature Branch**: `[###-feature-name]`  
-**Created**: [DATE]  
-**Status**: Draft  
+**Feature Branch**: `[###-feature-name]`
+**Created**: [DATE]
+**Status**: Draft
 **Input**: User description: "$ARGUMENTS"
 
 ## User Scenarios & Testing *(mandatory)*
@@ -11,7 +11,7 @@
   IMPORTANT: User stories should be PRIORITIZED as user journeys ordered by importance.
   Each user story/journey must be INDEPENDENTLY TESTABLE - meaning if you implement just ONE of them,
   you should still have a viable MVP (Minimum Viable Product) that delivers value.
-  
+
   Assign priorities (P1, P2, P3, etc.) to each story, where P1 is the most critical.
   Think of each story as a standalone slice of functionality that can be:
   - Developed independently
@@ -67,25 +67,17 @@
 
 ### Edge Cases
 
-<!--
-  ACTION REQUIRED: The content in this section represents placeholders.
-  Fill them out with the right edge cases.
--->
-
 - What happens when [boundary condition]?
 - How does system handle [error scenario]?
+- What happens when speech recognition is wrong, partial, or delayed?
+- What happens when network quality drops or voice capture starts unintentionally?
 
 ## Requirements *(mandatory)*
-
-<!--
-  ACTION REQUIRED: The content in this section represents placeholders.
-  Fill them out with the right functional requirements.
--->
 
 ### Functional Requirements
 
 - **FR-001**: System MUST [specific capability, e.g., "allow users to create accounts"]
-- **FR-002**: System MUST [specific capability, e.g., "validate email addresses"]  
+- **FR-002**: System MUST [specific capability, e.g., "validate email addresses"]
 - **FR-003**: Users MUST be able to [key interaction, e.g., "reset their password"]
 - **FR-004**: System MUST [data requirement, e.g., "persist user preferences"]
 - **FR-005**: System MUST [behavior, e.g., "log all security events"]
@@ -95,6 +87,26 @@
 - **FR-006**: System MUST authenticate users via [NEEDS CLARIFICATION: auth method not specified - email/password, SSO, OAuth?]
 - **FR-007**: System MUST retain user data for [NEEDS CLARIFICATION: retention period not specified]
 
+### Input Efficiency Rationale *(mandatory)*
+
+- Target user: [Describe who is trying to enter text]
+- Target task: [Describe the concrete text-input job]
+- Current pain point: [Describe why keyboard or existing voice flow is too slow or costly]
+- Efficiency gain hypothesis: [State how this feature reduces time, taps, or edits]
+
+### Quality Constraints *(mandatory)*
+
+- Accuracy requirement: [State acceptable recognition quality and what error types matter]
+- Latency requirement: [State user-visible response budget]
+- Cost requirement: [State acceptable inference, bandwidth, or device-resource budget]
+- Privacy boundary: [State what is processed locally, what is uploaded, and retention rules]
+
+### Recovery & Fallback *(mandatory)*
+
+- Failure scenarios: [List the main ways this flow can fail]
+- User recovery path: [Explain edit, retry, undo, or fallback behavior]
+- Non-goals and deferrals: [State any intentionally excluded capability]
+
 ### Key Entities *(include if feature involves data)*
 
 - **[Entity 1]**: [What it represents, key attributes without implementation]
@@ -102,25 +114,23 @@
 
 ## Success Criteria *(mandatory)*
 
-<!--
-  ACTION REQUIRED: Define measurable success criteria.
-  These must be technology-agnostic and measurable.
--->
-
 ### Measurable Outcomes
 
 - **SC-001**: [Measurable metric, e.g., "Users can complete account creation in under 2 minutes"]
 - **SC-002**: [Measurable metric, e.g., "System handles 1000 concurrent users without degradation"]
 - **SC-003**: [User satisfaction metric, e.g., "90% of users successfully complete primary task on first attempt"]
 - **SC-004**: [Business metric, e.g., "Reduce support tickets related to [X] by 50%"]
+- **SC-005**: [Task metric, e.g., "Users finish the target input task faster than the current baseline"]
+- **SC-006**: [Editing metric, e.g., "Users require fewer corrections than the current baseline"]
+
+## Validation Plan *(mandatory)*
+
+- Baseline comparison: [What current workflow or product is the benchmark]
+- Real user scenario: [What representative task will be tested]
+- Success method: [How completion time, edits, and failure recovery will be measured]
+- Rollout feedback source: [How beta or gray-release feedback will influence priority]
 
 ## Assumptions
-
-<!--
-  ACTION REQUIRED: The content in this section represents placeholders.
-  Fill them out with the right assumptions based on reasonable defaults
-  chosen when the feature description did not specify certain details.
--->
 
 - [Assumption about target users, e.g., "Users have stable internet connectivity"]
 - [Assumption about scope boundaries, e.g., "Mobile support is out of scope for v1"]

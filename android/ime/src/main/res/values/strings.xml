@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ime_app_name">Voice Input MVP</string>
+    <string name="ime_service_label">Voice Input IME</string>
+    <string name="ime_subtype_label">Mandarin Voice Input</string>
+    <string name="ime_button_start">Start Voice</string>
+    <string name="ime_button_stop">Stop Voice</string>
+    <string name="ime_button_cancel">Cancel Voice</string>
+    <string name="ime_status_idle">Voice input idle</string>
+    <string name="ime_status_connecting">Connecting voice service...</string>
+    <string name="ime_status_listening">Listening...</string>
+    <string name="ime_status_processing">Processing audio...</string>
+    <string name="ime_status_result">Recognition result inserted.</string>
+    <string name="ime_status_error">Recognition failed. Tap Start Voice to retry.</string>
+    <string name="ime_status_missing_connection">No active input connection.</string>
+    <string name="ime_status_cancelled">Voice input cancelled.</string>
+    <string name="ime_status_unavailable">Speech recognition is unavailable on this device.</string>
+</resources>
